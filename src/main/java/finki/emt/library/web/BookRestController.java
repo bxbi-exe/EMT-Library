@@ -46,4 +46,11 @@ public class BookRestController {
                 .map(book -> ResponseEntity.ok().body(book))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+    @PostMapping("/rent/{id}")
+    public ResponseEntity<Book> rentBook(@PathVariable Long id, @RequestParam int numOfCopies)
+    {
+        return bookService.rentBook(id, numOfCopies)
+                .map(book -> ResponseEntity.ok().body(book))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

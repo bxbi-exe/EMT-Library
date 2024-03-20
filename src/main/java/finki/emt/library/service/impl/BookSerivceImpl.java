@@ -3,6 +3,9 @@ package finki.emt.library.service.impl;
 import finki.emt.library.model.Author;
 import finki.emt.library.model.Book;
 import finki.emt.library.model.Category;
+import finki.emt.library.model.events.BookCreatedEvent;
+import finki.emt.library.model.events.BookDeletedEvent;
+import finki.emt.library.model.events.BookEditedEvent;
 import finki.emt.library.model.exceptions.InvalidAuthorIdException;
 import finki.emt.library.model.exceptions.InvalidBookIdException;
 import finki.emt.library.model.exceptions.NotEnoughNumberOfCopiesException;
@@ -10,6 +13,7 @@ import finki.emt.library.repository.AuthorRepository;
 import finki.emt.library.repository.BookRepository;
 import finki.emt.library.service.BookService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +24,7 @@ import java.util.Optional;
 public class BookSerivceImpl implements BookService {
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
     @Override
     public List<Book> findAll() {
         return bookRepository.findAll();
@@ -34,6 +39,7 @@ public class BookSerivceImpl implements BookService {
     public Optional<Book> save(String name, Category category, Long authorId, int availableCopies) {
         Author author = authorRepository.findById(authorId).orElseThrow(InvalidAuthorIdException::new);
         Book book = new Book(name, category, author, availableCopies);
+        applicationEventPublisher.publishEvent(new BookCreatedEvent(book));
         return Optional.of(bookRepository.save(book));
     }
 
@@ -41,6 +47,7 @@ public class BookSerivceImpl implements BookService {
     public Optional<Book> delete(Long id) {
         Book book = findById(id);
         bookRepository.delete(book);
+        applicationEventPublisher.publishEvent(new BookDeletedEvent(book));
         return Optional.of(book);
     }
 
@@ -52,6 +59,7 @@ public class BookSerivceImpl implements BookService {
         book.setCategory(category);
         book.setAuthor(author);
         book.setAvailableCopies(availableCopies);
+        applicationEventPublisher.publishEvent(new BookEditedEvent(book));
         return Optional.of(bookRepository.save(book));
     }
 
